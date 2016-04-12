@@ -19,6 +19,13 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin()
   ],
   module : {
+    preLoaders: [
+      {
+        test: /\.js$/,
+        loader: 'eslint',
+        include: __dirname + '/app'
+      }
+    ],
     loaders : [
       {
         test: /\.js$/,
