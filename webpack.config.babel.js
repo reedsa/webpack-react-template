@@ -1,4 +1,5 @@
 import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 module.exports = {
   entry: [
@@ -11,6 +12,10 @@ module.exports = {
     filename: 'bundle.js'
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      template: 'app/index.tpl.html',
+      filename: 'index.html'
+    }),
     new webpack.HotModuleReplacementPlugin()
   ],
   module : {
