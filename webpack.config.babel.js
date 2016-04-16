@@ -1,51 +1,83 @@
-import webpack from 'webpack';
-import path from 'path';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
+const webpack = require('webpack');
+const path = require('path');
+const merge = require('webpack-merge');
+const NpmInstallPlugin = require('npm-install-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-var paths = {
+const TARGET = process.env.npm_lifecycle_event;
+process.env.BABEL_ENV = TARGET;
+
+const PATHS = {
   app: path.join(__dirname, 'app'),
   build: path.join(__dirname, 'build')
 };
 
-module.exports = {
-  entry: [
-    'webpack-dev-server/client?http://localhost:3000',
-    'webpack/hot/only-dev-server',
-    paths.app
-  ],
+const common = {
+  entry: {
+    app: PATHS.app
+  },
+  resolve: {
+    extensions: ['', '.js', '.jsx']
+  },
   output: {
-    path: paths.build,
+    path: PATHS.build,
     filename: 'bundle.js'
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: 'app/index.tpl.html',
-      filename: 'index.html'
-    }),
-    new webpack.HotModuleReplacementPlugin()
-  ],
   module : {
     preLoaders: [
       {
         test: /\.js$/,
         loader: 'eslint',
-        include: paths.app
+        include: PATHS.app
       }
     ],
     loaders : [
       {
-        test: /\.js$/,
-        loader: 'react-hot',
-        include: paths.app
-      },
-      {
-        test : /\.js$/,
-        loader : 'babel-loader',
-        include: paths.app,
-        query: {
-          presets: ['es2016', 'react']
-        }
+        test : /\.jsx?$/,
+        loader : 'babel?cacheDirectory',
+        include: PATHS.app
       }
     ]
   }
+}
+
+// Default configuration
+if(TARGET === 'start' || !TARGET) {
+  module.exports = merge(common, {
+    devServer: {
+      contentBase: PATHS.build,
+
+      // Enable sourcemaps
+      devtool: 'eval-source-map',
+
+      // Enable history API fallback so HTML5 History API based
+      // routing works.
+      historyApiFallback: true,
+      hot: true,
+      inline: true,
+      progress: true,
+
+      // Display only errors to reduce the amount of output.
+      stats: 'errors-only',
+
+      // Parse host and port from env so this is easy to customize.
+      host: process.env.HOST,
+      port: process.env.PORT || 3000
+    },
+    plugins: [
+      // Generate index.html from the template file
+      new HtmlWebpackPlugin({
+        template: 'app/index.tpl.html',
+        filename: 'index.html'
+      }),
+      new webpack.HotModuleReplacementPlugin(),
+      new NpmInstallPlugin({
+        save: true // --save
+      })
+    ]
+  });
+}
+
+if(TARGET === 'build') {
+  module.exports = merge(common, {});
 }
